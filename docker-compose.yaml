@@ -1,0 +1,53 @@
+volumes:
+  mysql:
+    name: nextcloud_db
+  redis:
+    name: nextcloud_redis
+
+services:
+  owncloud:
+    image: owncloud/server
+    container_name: owncloud-app
+    restart: always
+    ports:
+      - ${NEXTCLOUD_HTTP_PORT:-8080}:8080
+    depends_on:
+      - mariadb
+      - redis
+    environment:
+      - OWNCLOUD_DOMAIN=${OWNCLOUD_DOMAIN}
+      - OWNCLOUD_TRUSTED_DOMAINS=${OWNCLOUD_TRUSTED_DOMAINS}
+      - OWNCLOUD_DB_TYPE=mysql
+      - OWNCLOUD_DB_NAME=${MYSQL_DATABASE}
+      - OWNCLOUD_DB_USERNAME=${MYSQL_USER}
+      - OWNCLOUD_DB_PASSWORD=${MYSQL_PASSWORD}
+      - OWNCLOUD_DB_HOST=mariadb
+      - OWNCLOUD_ADMIN_USERNAME=${ADMIN_USERNAME}
+      - OWNCLOUD_ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - OWNCLOUD_MYSQL_UTF8MB4=true
+      - OWNCLOUD_REDIS_ENABLED=true
+      - OWNCLOUD_REDIS_HOST=redis
+    volumes:
+      - /mnt/cloud:/mnt/data
+
+  mariadb:
+    image: mariadb
+    container_name: owncloud-db
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MARIADB_AUTO_UPGRADE=0
+    command: ["--max-allowed-packet=128M", "--innodb-log-file-size=64M"]
+    volumes:
+      - mysql:/var/lib/mysql
+
+  redis:
+    image: redis
+    container_name: owncloud-redis
+    restart: always
+    command: ["--databases", "1"]
+    volumes:
+      - redis:/data
