@@ -29,7 +29,7 @@ services:
       - OWNCLOUD_REDIS_ENABLED=true
       - OWNCLOUD_REDIS_HOST=redis
     volumes:
-      - /mnt/cloud:/mnt/data
+      - ${CLOUD_FOLDER}:/mnt/data
     networks:
       - net
 
